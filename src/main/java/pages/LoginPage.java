@@ -1,6 +1,7 @@
 package pages; // Defines the package where this class belongs
 
 // Selenium imports for interacting with web elements and handling exceptions
+ import utils.PropertiesUtil;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -39,10 +40,12 @@ public class LoginPage {
 
     /**
      * Navigates to the Automation Exercise home page.
+     *
      * @param baseUrl Base URL from configuration
      */
-    public void navigateToHomePage(String baseUrl) {
-        driver.get(baseUrl); // Opens the given URL in the browser
+    public void navigateToHomePage() {
+        String baseUrl = PropertiesUtil.getProperty("baseUrl"); // Read from config
+        driver.get(baseUrl); // Open browser with base URL
     }
 
     /**

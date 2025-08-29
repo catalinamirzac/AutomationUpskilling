@@ -9,7 +9,7 @@ import static io.cucumber.junit.CucumberOptions.SnippetType;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = "src/test/resources/features",
-        glue = {"stepdefinitions"},
+        glue = {"stepdefinitions.api", "stepdefinitions.ui"},
         tags = "@ui",
         plugin = {
                 "pretty",

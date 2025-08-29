@@ -1,4 +1,4 @@
-package stepdefinitions;
+package stepdefinitions.ui;
 
 import java.util.logging.Logger;
 

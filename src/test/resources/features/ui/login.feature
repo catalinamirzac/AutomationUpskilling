@@ -15,6 +15,6 @@ Feature: User Login
 
     Examples:
       | email                  | password       | result       |
-      | johnwhite@gmail.com    | Stefan2015     | succeed      |
+      | myuser@yahoo.com       | mypassword1    | succeed      |
       | wrong_user@test.com    | secret_sauce   | fail         |
       | standard_user@test.com | wrong_pass     | fail         |

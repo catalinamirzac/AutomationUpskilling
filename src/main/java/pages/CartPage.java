@@ -1,67 +1,49 @@
 package pages;
 
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
-import java.time.Duration;
-import java.util.List;
-
+/**
+ * Page Object class for the Cart page of AutomationExercise.
+ * Encapsulates locators and methods to validate cart content.
+ */
 public class CartPage {
+
     private final WebDriver driver;
-    private final WebDriverWait wait;
 
-    private final By cartInfo = By.id("cart_info");
+    // XPath for each cart line item, matched by product name
+    private final String cartItemXpath = "//tr[.//a[text()='%s']]";
 
+    // XPath for quantity cell inside a cart line item row
+    private final String quantityXpath = cartItemXpath + "//button[@class='disabled']";
+
+    /**
+     * Constructor that receives a shared WebDriver instance
+     * @param driver the WebDriver used to interact with the browser
+     */
     public CartPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    private By rowFor(String productName) {
-        return By.xpath("//tr[.//td[@class='cart_description']//a[normalize-space()='" + productName + "']]");
-    }
-
+    /**
+     * Checks if a cart line with the given product name exists
+     * @param productName the name of the product (e.g., "Blue Top")
+     * @return true if the product is present in the cart
+     */
     public boolean hasLine(String productName) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(cartInfo));
-        try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(rowFor(productName))).isDisplayed();
-        } catch (TimeoutException e) {
-            return false;
-        }
+        String xpath = String.format(cartItemXpath, productName);
+        return !driver.findElements(By.xpath(xpath)).isEmpty();
     }
 
-    /** Reads quantity whether it's rendered as a button, input, or plain text. */
+    /**
+     * Gets the quantity of a product in the cart by name
+     * @param productName the product to search for
+     * @return the quantity as an integer (e.g., 1, 2, 3...)
+     */
     public int getQuantity(String productName) {
-        WebElement row = wait.until(ExpectedConditions.visibilityOfElementLocated(rowFor(productName)));
-
-        // 1) Button variant (common): <td class="cart_quantity"><button class="disabled">1</button>
-        List<WebElement> buttons =
-                row.findElements(By.cssSelector("td.cart_quantity button.disabled, td.cart_quantity button"));
-        if (!buttons.isEmpty()) {
-            String txt = buttons.get(0).getText().trim();
-            if (!txt.isEmpty()) {
-                String digits = txt.replaceAll("[^0-9]", "");
-                if (!digits.isBlank()) return Integer.parseInt(digits);
-            }
-        }
-
-        // 2) Input variant (older): <input class="cart_quantity_input" value="1">
-        List<WebElement> inputs =
-                row.findElements(By.cssSelector("td.cart_quantity input.cart_quantity_input, td.cart_quantity input"));
-        if (!inputs.isEmpty()) {
-            String val = inputs.get(0).getAttribute("value");
-            if (val != null && !val.isBlank()) {
-                String digits = val.replaceAll("[^0-9]", "");
-                if (!digits.isBlank()) return Integer.parseInt(digits);
-            }
-        }
-
-        // 3) Fallback: any digits inside the quantity cell
-        WebElement qtyCell = row.findElement(By.cssSelector("td.cart_quantity"));
-        String digits = qtyCell.getText().replaceAll("[^0-9]", "");
-        if (!digits.isBlank()) return Integer.parseInt(digits);
-
-        throw new NoSuchElementException("Could not read quantity for '" + productName + "'");
+        String xpath = String.format(quantityXpath, productName);
+        WebElement qtyButton = driver.findElement(By.xpath(xpath));
+        return Integer.parseInt(qtyButton.getText().trim());
     }
 }
