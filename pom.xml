@@ -12,31 +12,69 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
 
+        <!-- Versions -->
         <cucumber.version>7.16.1</cucumber.version>
+        <allure.version>2.24.0</allure.version>
         <selenium.version>4.21.0</selenium.version>
         <junit4.version>4.13.2</junit4.version>
+        <restassured.version>5.4.0</restassured.version>
+        <assertj.version>3.26.0</assertj.version>
+        <faker.version>1.0.2</faker.version>
+        <log4j.version>2.23.1</log4j.version>
+
+        <!-- Dated Allure report locations -->
+        <maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+        <report.timestamp>${maven.build.timestamp}</report.timestamp>
+
+        <allure.results.dir>${project.build.directory}/allure-results</allure.results.dir>
+        <allure.site.dir>${project.build.directory}/site/allure-maven-plugin</allure.site.dir>
+        <allure.output.dir>${project.build.directory}/reports/allure-${report.timestamp}</allure.output.dir>
     </properties>
+
+    <!-- Align ALL cucumber-* artifacts to the same version -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-bom</artifactId>
+                <version>${cucumber.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <repositories>
         <repository>
             <id>central</id>
-            <name>Maven Central</name>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
     </repositories>
 
     <dependencies>
-        <!-- Cucumber (Java bindings + JUnit4 runner) -->
+        <!-- Cucumber + JUnit4 -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
-            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Allure adapters -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-cucumber7-jvm</artifactId>
+            <version>${allure.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-rest-assured</artifactId>
+            <version>${allure.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -48,6 +86,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- RestAssured -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${restassured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Selenium -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -55,60 +101,118 @@
             <version>${selenium.version}</version>
         </dependency>
 
-        <!-- Keep ONLY if your code still imports WebDriverManager -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>5.8.0</version>
-        </dependency>
-
-        <!-- ✅ Moved these here (previously misplaced) -->
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.23.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.23.1</version>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- Utilities -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
-            <version>1.0.2</version>
+            <version>${faker.version}</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <version>5.4.0</version>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- AssertJ (tests only) -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.26.0</version>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.17.0</version>
+            <!-- remove <scope>test</scope> -->
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.0</version>
+            <!-- remove <scope>test</scope> -->
+        </dependency>
+
+        <!-- Log4j (tests) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Optional: auto-manage driver binaries -->
+        <!--
+        <dependency>
+          <groupId>io.github.bonigarcia</groupId>
+          <artifactId>webdrivermanager</artifactId>
+          <version>5.8.0</version>
+          <scope>test</scope>
+        </dependency>
+        -->
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Run tests; pass Allure results dir & default baseUrl (override with -DbaseUrl=...) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
                     <failIfNoTests>false</failIfNoTests>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${allure.results.dir}</allure.results.directory>
+                        <baseUrl>https://automationexercise.com</baseUrl>
+                    </systemPropertyVariables>
                 </configuration>
+            </plugin>
+
+            <!-- Generate Allure static site under target/site/allure-maven-plugin -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.12.0</version>
+                <executions>
+                    <execution>
+                        <id>allure-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy the ENTIRE generated site to dated & latest folders -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-allure-site</id>
+                        <phase>verify</phase>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${allure.output.dir}"/>
+                                <copy todir="${allure.output.dir}" overwrite="true">
+                                    <fileset dir="${allure.site.dir}" includes="**/*"/>
+                                </copy>
+                                <mkdir dir="${project.build.directory}/reports/latest"/>
+                                <copy todir="${project.build.directory}/reports/latest" overwrite="true">
+                                    <fileset dir="${allure.site.dir}" includes="**/*"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

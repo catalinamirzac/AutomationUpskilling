@@ -1,7 +1,6 @@
-// DriverManager.java
+// utils/DriverManager.java
 package utils;
 
-import utils.PropertiesUtil;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -9,28 +8,39 @@ import org.openqa.selenium.chrome.ChromeOptions;
 public class DriverManager {
     private static WebDriver driver;
 
-    private DriverManager(){}
+    private DriverManager() {}
 
     public static WebDriver getDriver() {
         if (driver == null) {
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--disable-notifications");
+            ChromeOptions opts = new ChromeOptions();
 
-            // headless toggle
-            if (PropertiesUtil.isHeadless()) {
-                // if this fails on older Chrome, switch to "--headless"
-                options.addArguments("--headless=new");
-                options.addArguments("--window-size=1920,1080");
+            // toggle with -Dheadless=true/false (default: false = show the window)
+            boolean headless = Boolean.parseBoolean(System.getProperty("headless", "false"));
+
+            if (headless) {
+                opts.addArguments("--headless=new");
+                opts.addArguments("--window-size=1920,1080"); // avoids blank screenshots
+            } else {
+                opts.addArguments("--start-maximized");
             }
 
-            // ✅ Selenium Manager will download / pick the right ChromeDriver
-            driver = new ChromeDriver(options);
-            driver.manage().window().maximize();
+            // stability flags (safe on Windows too)
+            opts.addArguments("--disable-gpu");
+            opts.addArguments("--no-sandbox");
+
+            driver = new ChromeDriver(opts);
+
+            if (!headless) {
+                try { driver.manage().window().maximize(); } catch (Throwable ignored) {}
+            }
         }
         return driver;
     }
 
     public static void quitDriver() {
-        if (driver != null) { driver.quit(); driver = null; }
+        if (driver != null) {
+            driver.quit();
+            driver = null;
+        }
     }
 }
