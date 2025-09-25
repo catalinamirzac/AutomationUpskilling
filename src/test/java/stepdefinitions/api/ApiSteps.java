@@ -1,147 +1,124 @@
 package stepdefinitions.api;
 
 import com.github.javafaker.Faker;
-import Enums.AccountFields;
+import context.ScenarioContext;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
-import utils.PropertiesUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
+import actions.ApiActions;
+import utils.FormDataResolver;
+
 import java.util.Map;
 
-import static io.restassured.RestAssured.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ApiSteps {
 
     private static final Logger logger = LogManager.getLogger(ApiSteps.class);
+
     private final Faker faker = new Faker();
+    private final ScenarioContext scenarioContext = new ScenarioContext();
 
     private Response response;
-    private RequestSpecification request;
-    private String baseUrl;
 
+    // ---------- Given ----------
     @Given("the API base URL is loaded from config")
     public void load_base_url_from_config() {
-        this.baseUrl = PropertiesUtil.getProperty("baseUrl");
-        this.request = given()
-                .baseUri(baseUrl)
-                .contentType("application/x-www-form-urlencoded");
-
-        logger.info(" Base URL set to: {}", baseUrl);
+        // ApiActions reads baseUrl internally via PropertiesUtil
+        logger.info("API base URL loaded from config.");
     }
 
+    // ---------- When ----------
     @When("I send a GET request to {string}")
     public void i_send_get_request(String endpoint) {
-        response = given().get(endpoint);
-        String raw = response.getBody().asString();
+        response = ApiActions.get(endpoint);
+    }
 
-        if (raw.contains("<body>") && raw.contains("</body>")) {
-            raw = raw.substring(raw.indexOf("<body>") + 6, raw.indexOf("</body>")).trim();
-        }
-
-        logger.info(" GET → {}", endpoint);
-        logger.info(" Response body:\n{}", raw);
+    @When("I send a POST request to {string}")
+    public void i_send_post_request_without_body(String endpoint) {
+        response = ApiActions.post(endpoint);
     }
 
     @When("I send a POST request to {string} with body:")
-    public void i_send_post_request_to_with_body(String endpoint, Map<String, String> originalParams) {
-        Map<String, String> formParams = new HashMap<>();
-
-        for (Map.Entry<String, String> entry : originalParams.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-
-            if ("faker".equalsIgnoreCase(value)) {
-                try {
-                    AccountFields field = AccountFields.fromKey(key);
-                    value = field.generate(faker);
-                    logger.info(" Faker generated {}: {}", key, value);
-                } catch (IllegalArgumentException e) {
-                    logger.warn(" Unknown key: {}. Skipping Faker.", key);
-                }
-            }
-
-            formParams.put(key, value);
-        }
-
-        response = request
-                .formParams(formParams)
-                .post(endpoint)
-                .then()
-                .extract()
-                .response();
-
-        logger.info(" POST to: {} with body: {}", endpoint, formParams);
-        logger.info(" Response:\n{}", response.asPrettyString());
+    public void i_send_post_request_with_body(String endpoint, DataTable table) {
+        Map<String, String> formParams = FormDataResolver.resolve(
+                table.asMap(String.class, String.class),
+                faker,
+                scenarioContext
+        );
+        response = ApiActions.postWithForm(endpoint, formParams);
     }
 
+    @When("I send a PUT request to {string}")
+    public void i_send_put_request(String endpoint) {
+        response = ApiActions.put(endpoint);
+    }
 
+    // ---------- Then ----------
     @Then("the response code should be {int}")
     public void the_response_code_should_be(int expectedCode) {
-        int actualCode = response.statusCode();
-        logger.info(" Status Code: expected={}, actual={}", expectedCode, actualCode);
-        assertThat(actualCode).isEqualTo(expectedCode);
+        assertThat(response).as("Response was not set").isNotNull();
+        int actual = response.statusCode();
+        logger.info("Status Code: expected={}, actual={}", expectedCode, actual);
+        assertThat(actual).isEqualTo(expectedCode);
+    }
+
+    @Then("the response JSON message should be {string}")
+    public void theResponseJSONMessageShouldBe(String expected) {
+        assertThat(response).as("Response was not set").isNotNull();
+        String actual = response.then().extract().jsonPath().getString("message");
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Then("the response body has path {string}")
+    public void response_body_has_path(String path) {
+        assertThat(response).as("Response was not set").isNotNull();
+        Object value = response.jsonPath().get(path);
+        assertThat(value).as("Expected JSON path '%s' to exist", path).isNotNull();
     }
 
     @Then("the response body should contain field {string}")
-    public void response_should_contain_field(String field) {
-        int responseCode = response.jsonPath().getInt(field);
-        logger.info("🔎 Response field: {} = {}", field, responseCode);
-        assertThat(responseCode).isEqualTo(201);
+    public void response_body_should_contain_field(String path) {
+        assertThat(response).as("Response was not set").isNotNull();
+        Object value = response.jsonPath().get(path);
+        assertThat(value).as("Expected JSON path '%s' to exist", path).isNotNull();
     }
 
+    @Then("the response body at path {string} is a non-empty list")
+    public void response_path_is_non_empty_list(String path) {
+        assertThat(response).as("Response was not set").isNotNull();
+        assertThat(response.jsonPath().getList(path)).isNotNull().isNotEmpty();
+    }
 
-    @When("I send a PUT request to {string}")
-    public void i_send_put_request_to(String endpoint) {
-        baseUrl = PropertiesUtil.getProperty("baseUrl");
-
-        response = given()
-                .baseUri(baseUrl)
-                .contentType("application/json")
-                .when()
-                .put(endpoint)
-                .then()
-                .extract()
-                .response();
-
-        logger.info(" PUT → {}", endpoint);
-        logger.info(" Response body:\n{}", response.asPrettyString());
+    @Then("the response body at path {string} equals {int}")
+    public void response_path_equals_int(String path, int expected) {
+        assertThat(response).as("Response was not set").isNotNull();
+        assertThat(response.jsonPath().getInt(path)).isEqualTo(expected);
     }
 
     @Then("the response body should contain responseCode {int} and message {string}")
     public void response_should_contain_code_and_message(int expectedCode, String expectedMessage) {
-        String body = response.getBody().asString();
-        logger.info(" Verifying response body contains: responseCode {} and message \"{}\"", expectedCode, expectedMessage);
-
-        assertThat(body).contains("\"responseCode\": " + expectedCode);
-        assertThat(body).contains("\"message\": \"" + expectedMessage + "\"");
-
-        logger.info(" Verified response contains correct code and message.");
-    }
-
-
-    @Then("the response body should contain the message {string}")
-    public void verify_response_contains_message(String expectedMessage) {
-        String body = response.getBody().asString();
-        assertThat(body).contains(expectedMessage);
-        logger.info(" Response body contains message: {}", expectedMessage);
+        assertThat(response).as("Response was not set").isNotNull();
+        int code = response.then().extract().jsonPath().getInt("responseCode");
+        String message = response.then().extract().jsonPath().getString("message");
+        assertThat(code).isEqualTo(expectedCode);
+        assertThat(message).isEqualTo(expectedMessage);
     }
 
     @Then("the response should contain a list of products")
     public void response_should_contain_products() {
-        int size = response.jsonPath().getList("products").size();
-        logger.info(" Number of products returned: {}", size);
-        assertThat(size).isGreaterThan(0);
+        assertThat(response).as("Response was not set").isNotNull();
+        var products = response.then().extract().jsonPath().getList("products");
+        assertThat(products).as("products").isNotNull().isNotEmpty();
     }
 
     @Then("the response should contain a list of brands")
     public void response_should_contain_brands() {
-        int size = response.jsonPath().getList("brands").size();
-        logger.info(" Number of brands returned: {}", size);
-        assertThat(size).isGreaterThan(0);
+        assertThat(response).as("Response was not set").isNotNull();
+        var brands = response.then().extract().jsonPath().getList("brands");
+        assertThat(brands).as("brands").isNotNull().isNotEmpty();
     }
 }

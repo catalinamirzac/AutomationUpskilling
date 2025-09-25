@@ -9,13 +9,15 @@ import static io.cucumber.junit.CucumberOptions.SnippetType;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = "src/test/resources/features",
-        glue = {"stepdefinitions.api", "stepdefinitions.ui"},
-        tags = "@ui",
+        glue = {
+                "stepdefinitions.api",
+                "stepdefinitions.ui",
+                "hooks"   // 👈 contains ReportingHooks
+        },
         plugin = {
                 "pretty",
                 "summary",
-                "html:target/ui-cucumber-report.html",
-                "json:target/ui-cucumber.json"
+                "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"
         },
         monochrome = true,
         snippets = SnippetType.CAMELCASE,
