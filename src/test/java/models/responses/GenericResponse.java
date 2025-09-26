@@ -4,5 +4,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GenericResponse extends BaseResponse {
-    // Inherits: int responseCode, String message
+
 }

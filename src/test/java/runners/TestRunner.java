@@ -12,7 +12,7 @@ import static io.cucumber.junit.CucumberOptions.SnippetType;
         glue = {
                 "stepdefinitions.api",
                 "stepdefinitions.ui",
-                "hooks"   // 👈 contains ReportingHooks
+                "hooks"
         },
         plugin = {
                 "pretty",

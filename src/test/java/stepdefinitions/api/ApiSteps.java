@@ -21,6 +21,9 @@ public class ApiSteps {
 
     private final Faker faker = new Faker();
     private final ScenarioContext scenarioContext = new ScenarioContext();
+    private <T> T as(Class<T> type) {
+        return response.then().extract().as(type);
+    }
 
     private Response response;
 
