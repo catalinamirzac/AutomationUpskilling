@@ -1,38 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %logger{36} - %msg%n</Property>
+    </Properties>
+
     <Appenders>
         <!-- Console output -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c - %m%n"/>
+            <PatternLayout pattern="${PATTERN}"/>
         </Console>
 
-        <!-- Rolling file output (no compression) -->
-        <RollingFile name="FileLogger"
-                     fileName="target/logs/test.log"
-                     filePattern="target/logs/test-%d{yyyy-MM-dd-HH-mm}.log">
-            <PatternLayout>
-                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c - %m%n</Pattern>
-            </PatternLayout>
+        <!-- Rolling file: captures everything -->
+        <RollingFile name="AllFile"
+                     fileName="${LOG_DIR}/test-all.log"
+                     filePattern="${LOG_DIR}/archive/test-all-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${PATTERN}"/>
             <Policies>
-                <!-- roll every minute (you can change interval) -->
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- roll daily and also when file > 10 MB -->
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
-            <!-- keep up to 20 log files, then delete oldest -->
-            <DefaultRolloverStrategy max="20"/>
+            <DefaultRolloverStrategy max="30"/>
         </RollingFile>
     </Appenders>
 
     <Loggers>
-        <!-- Your API step definitions -->
-        <Logger name="stepdefinitions.api" level="info" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="FileLogger"/>
-        </Logger>
+        <!-- Optional: tame very noisy 3rd-party libs but still show them -->
+        <Logger name="org.springframework" level="info" additivity="true"/>
+        <Logger name="org.apache.http" level="info" additivity="true"/>
+        <Logger name="org.openqa.selenium" level="info" additivity="true"/>
+        <Logger name="io.netty" level="warn" additivity="true"/>
 
-        <!-- Root logger -->
-        <Root level="info">
+        <!-- Root logger: logs EVERYTHING to both console and file -->
+        <Root level="debug">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="FileLogger"/>
+            <AppenderRef ref="AllFile"/>
         </Root>
     </Loggers>
 </Configuration>

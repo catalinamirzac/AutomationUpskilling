@@ -1,0 +1,13 @@
+2025-09-26 11:28:31.269 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 11:28:33.566 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:20:54.494 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 14:20:57.051 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:20:57.428 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 14:20:58.368 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:21:12.870 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 14:21:15.364 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:21:15.772 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 14:21:16.662 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:21:28.989 [main] INFO  stepdefinitions.api.ApiSteps - API base URL loaded from config.
+2025-09-26 14:21:31.293 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200
+2025-09-26 14:21:32.440 [main] INFO  stepdefinitions.api.ApiSteps - Status Code: expected=200, actual=200

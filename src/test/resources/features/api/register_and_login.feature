@@ -1,6 +1,5 @@
 @api
 Feature: Register and Login with newly created User via API
-
   Scenario: Register and login with the same (saved) credentials
     Given the API base URL is loaded from config
     When I send a POST request to "/api/createAccount" with body:
