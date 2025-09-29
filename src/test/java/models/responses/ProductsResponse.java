@@ -6,14 +6,15 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductsResponse extends BaseResponse {
 
-    private List<Product> products; // maps "products": [ { ... }, ... ]
+    private List<Product> products;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Product {
-        private int id;          // adjust to your real JSON
+        private int id;
         private String name;
         private String brand;
-        private double price;    // if API sends String price, change to String
+        // ⚠️ Keep as String because API returns "Rs. 500"
+        private String price;
 
         public int getId() { return id; }
         public void setId(int id) { this.id = id; }
@@ -24,8 +25,8 @@ public class ProductsResponse extends BaseResponse {
         public String getBrand() { return brand; }
         public void setBrand(String brand) { this.brand = brand; }
 
-        public double getPrice() { return price; }
-        public void setPrice(double price) { this.price = price; }
+        public String getPrice() { return price; }
+        public void setPrice(String price) { this.price = price; }
     }
 
     public List<Product> getProducts() { return products; }

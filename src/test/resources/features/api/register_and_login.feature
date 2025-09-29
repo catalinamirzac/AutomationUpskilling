@@ -23,7 +23,7 @@ Feature: Register and Login with newly created User via API
     Then the response code should be 200
     And the response body should contain field "responseCode"
 
-    When I send a POST request to "/api/verifyLogin" with body:
+    And I send a POST request to "/api/verifyLogin" with body:
       | email    | saved |
       | password | saved |
     Then the response code should be 200

@@ -1,12 +1,13 @@
 package stepdefinitions.ui;
 
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BaseDefine {
-    protected final Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = LogManager.getLogger(getClass());
 
     /** printf-style logging: use %s in the message */
     protected void logf(String format, Object... args) {
-        logger.info(String.format(format, args));
+        logger.info(String.format(format, args));  // <-- use logger.info
     }
 }

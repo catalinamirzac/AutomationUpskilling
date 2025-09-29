@@ -1,41 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="LOG_DIR">logs</Property>
-        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5p %logger{36} - %msg%n</Property>
+        <Property name="LOG_DIR">${sys:project.build.directory:-target}/logs</Property>
+        <Property name="RUN_STAMP">${date:yyyy-MM-dd_HH-mm-ss}</Property>
+        <Property name="RUN_LOG">${LOG_DIR}/atf-${RUN_STAMP}.log</Property>
+
+        <Property name="CONSOLE_PATTERN">%highlight{%d{HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n}</Property>
+        <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n</Property>
     </Properties>
 
     <Appenders>
-        <!-- Console output -->
+        <!-- Console (colored) -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="${PATTERN}"/>
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
         </Console>
 
-        <!-- Rolling file: captures everything -->
-        <RollingFile name="AllFile"
-                     fileName="${LOG_DIR}/test-all.log"
-                     filePattern="${LOG_DIR}/archive/test-all-%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="${PATTERN}"/>
-            <Policies>
-                <!-- roll daily and also when file > 10 MB -->
-                <TimeBasedTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="10 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="30"/>
-        </RollingFile>
+        <!-- Per-run file (unique filename each test run, no rolling) -->
+        <File name="PerRunFile" fileName="${RUN_LOG}" createOnDemand="true">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+        </File>
     </Appenders>
 
     <Loggers>
-        <!-- Optional: tame very noisy 3rd-party libs but still show them -->
-        <Logger name="org.springframework" level="info" additivity="true"/>
-        <Logger name="org.apache.http" level="info" additivity="true"/>
-        <Logger name="org.openqa.selenium" level="info" additivity="true"/>
-        <Logger name="io.netty" level="warn" additivity="true"/>
+        <!-- Tame noisy libs -->
+        <Logger name="io.restassured" level="WARN"/>
+        <Logger name="org.apache.http" level="WARN"/>
+        <Logger name="org.apache.hc.client5" level="WARN"/>
+        <Logger name="org.openqa.selenium" level="INFO"/>
+        <Logger name="io.netty" level="WARN"/>
 
-        <!-- Root logger: logs EVERYTHING to both console and file -->
-        <Root level="debug">
+        <Root level="INFO">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="PerRunFile"/>
         </Root>
     </Loggers>
 </Configuration>

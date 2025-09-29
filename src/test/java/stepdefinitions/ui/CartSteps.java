@@ -5,7 +5,8 @@ import static org.junit.Assert.*;      // Imports JUnit assertion methods: asser
 
 import pages.CartPage;                 // Imports the CartPage Page Object
 import pages.ProductsPage;            // Imports the ProductsPage Page Object
-import utils.DriverManager;           // Singleton WebDriver manager
+import utils.DriverManager;
+// Singleton WebDriver manager
 
 public class CartSteps extends BaseDefine { // Inherits logger functionality from BaseDefine
 
