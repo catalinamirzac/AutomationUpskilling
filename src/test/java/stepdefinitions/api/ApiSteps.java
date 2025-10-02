@@ -1,23 +1,19 @@
 package stepdefinitions.api;
 
+import actions.ApiActions;
 import com.github.javafaker.Faker;
 import context.ScenarioContext;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.*;
 import io.restassured.response.Response;
+import models.responses.ApiResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import actions.ApiActions;
 import utils.FormDataResolver;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import models.responses.BrandsResponse;
-import models.responses.GenericResponse;
-import models.responses.ProductsResponse;
 
 public class ApiSteps {
 
@@ -27,28 +23,15 @@ public class ApiSteps {
     private final ScenarioContext scenarioContext = new ScenarioContext();
     private Response response;
 
-    // -------- Helper (used by several steps) --------
-    private <T> T as(Class<T> type) {
+    private ApiResponse asApiResponse() {
         assertThat(response).as("Response was not set").isNotNull();
-        return response.then().extract().as(type);
+        return response.then().extract().as(ApiResponse.class);
     }
-
-
-
-    // -------- Custom summary loggers --------
-    private void logProductsSummary(ProductsResponse productsResponse) {
-        logger.info("Received {} products", productsResponse.getProducts().size());
-    }
-
-    private void logBrandsSummary(BrandsResponse brandsResponse) {
-        logger.info("Received {} brands", brandsResponse.getBrands().size());
-    }
-
 
     // -------- Given --------
     @Given("the API base URL is loaded from config")
     public void load_base_url_from_config() {
-        logger.info("✅ API base URL loaded from config.");
+        logger.info("API base URL loaded from config.");
     }
 
     // -------- When --------
@@ -75,41 +58,43 @@ public class ApiSteps {
     // -------- Then --------
     @Then("the response code should be {int}")
     public void the_response_code_should_be(int expectedCode) {
-        assertThat(response).as("Response was not set").isNotNull();
         assertThat(response.statusCode()).isEqualTo(expectedCode);
+        logger.info("Response code = {}", response.statusCode());
     }
 
     @Then("the response JSON message should be {string}")
     public void theResponseJSONMessageShouldBe(String expectedMessage) {
-        GenericResponse genericResponse = as(GenericResponse.class);
-        assertThat(genericResponse.getMessage()).isEqualTo(expectedMessage);
+        ApiResponse body = asApiResponse();
+        assertThat(body.getMessage()).isEqualTo(expectedMessage);
+        logger.info("Response message = {}", body.getMessage());
     }
 
     @Then("the response body should contain field {string}")
     public void response_body_should_contain_field(String path) {
-        assertThat(response).as("Response was not set").isNotNull();
         Object value = response.jsonPath().get(path);
         assertThat(value).as("Expected JSON path '%s' to exist", path).isNotNull();
+        logger.info("Response contains field {} = {}", path, value);
     }
 
     @Then("the response body should contain responseCode {int} and message {string}")
     public void response_should_contain_code_and_message(int expectedCode, String expectedMessage) {
-        GenericResponse genericResponse = as(GenericResponse.class);
-        assertThat(genericResponse.getResponseCode()).isEqualTo(expectedCode);
-        assertThat(genericResponse.getMessage()).isEqualTo(expectedMessage);
+        ApiResponse body = asApiResponse();
+        assertThat(body.getResponseCode()).isEqualTo(expectedCode);
+        assertThat(body.getMessage()).isEqualTo(expectedMessage);
+        logger.info("responseCode={}, message={}", body.getResponseCode(), body.getMessage());
     }
 
     @Then("the response should contain a list of products")
     public void response_should_contain_products() {
-        ProductsResponse productsResponse = as(ProductsResponse.class);
-        assertThat(productsResponse.getProducts()).isNotNull().isNotEmpty();
-        logProductsSummary(productsResponse); // 👈 useful summary
+        ApiResponse body = asApiResponse();
+        assertThat(body.getProducts()).isNotNull().isNotEmpty();
+        logger.info("Products count = {}", body.getProducts().size());
     }
 
     @Then("the response should contain a list of brands")
     public void response_should_contain_brands() {
-        BrandsResponse brandsResponse = as(BrandsResponse.class);
-        assertThat(brandsResponse.getBrands()).isNotNull().isNotEmpty();
-        logBrandsSummary(brandsResponse); // 👈 useful summary
+        ApiResponse body = asApiResponse();
+        assertThat(body.getBrands()).isNotNull().isNotEmpty();
+        logger.info("Brands count = {}", body.getBrands().size());
     }
 }
