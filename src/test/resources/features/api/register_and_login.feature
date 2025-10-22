@@ -2,7 +2,7 @@
 Feature: Register and Login with newly created User via API
   Scenario: Register and login with the same (saved) credentials
     Given the API base URL is loaded from config
-    When I send a POST request to "/api/createAccount" with body:
+    When I send a POST request to "createAccount" with body:
       | name          | faker |
       | email         | faker |
       | password      | faker |
@@ -23,7 +23,7 @@ Feature: Register and Login with newly created User via API
     Then the response code should be 200
     And the response body should contain field "responseCode"
 
-    And I send a POST request to "/api/verifyLogin" with body:
+    And I send a POST request to "login" with body:
       | email    | saved |
       | password | saved |
     Then the response code should be 200

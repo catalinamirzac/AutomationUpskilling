@@ -21,13 +21,5 @@ public class ScenarioContext {
         return type.cast(contextMap.get(key));
     }
 
-    /** Check if a key exists. */
-    public boolean has(String key) {
-        return contextMap.containsKey(key);
-    }
 
-    /** Remove everything (usually not needed; scenarios are fresh per run). */
-    public void clear() {
-        contextMap.clear();
-    }
 }

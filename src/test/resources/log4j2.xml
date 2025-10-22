@@ -2,36 +2,28 @@
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
         <Property name="LOG_DIR">${sys:project.build.directory:-target}/logs</Property>
-        <Property name="RUN_STAMP">${date:yyyy-MM-dd_HH-mm-ss}</Property>
-        <Property name="RUN_LOG">${LOG_DIR}/atf-${RUN_STAMP}.log</Property>
-
+        <Property name="STAMP">${date:yyyy-MM-dd}/${date:HH-mm-ss}</Property>
         <Property name="CONSOLE_PATTERN">%highlight{%d{HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n}</Property>
         <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n</Property>
     </Properties>
 
     <Appenders>
-        <!-- Console (colored) -->
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${CONSOLE_PATTERN}"/>
         </Console>
-
-        <!-- Per-run file (unique filename each test run, no rolling) -->
-        <File name="PerRunFile" fileName="${RUN_LOG}" createOnDemand="true">
+        <!-- Optional: run-wide log -->
+        <File name="RunFile" fileName="${LOG_DIR}/${STAMP}/run.log" createOnDemand="true">
             <PatternLayout pattern="${FILE_PATTERN}"/>
         </File>
     </Appenders>
 
     <Loggers>
-        <!-- Tame noisy libs -->
         <Logger name="io.restassured" level="WARN"/>
         <Logger name="org.apache.http" level="WARN"/>
-        <Logger name="org.apache.hc.client5" level="WARN"/>
         <Logger name="org.openqa.selenium" level="INFO"/>
-        <Logger name="io.netty" level="WARN"/>
-
         <Root level="INFO">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="PerRunFile"/>
+            <AppenderRef ref="RunFile"/>
         </Root>
     </Loggers>
 </Configuration>

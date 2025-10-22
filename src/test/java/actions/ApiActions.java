@@ -33,7 +33,7 @@ public final class ApiActions {
 
     // ---------- GET ----------
     public static Response get(String endpoint) {
-        logger.info("➡️  GET {}", endpoint);
+        logger.info("GET {}", endpoint);
         Response response = given()
                 .baseUri(BASE_URL)
                 .accept(ContentType.JSON)
@@ -49,7 +49,7 @@ public final class ApiActions {
     // ---------- POST ----------
     /** POST with no body */
     public static Response post(String endpoint) {
-        logger.info("➡️  POST {}", endpoint);
+        logger.info("POST {}", endpoint);
         Response response = given()
                 .baseUri(BASE_URL)
                 .accept(ContentType.JSON)
@@ -66,7 +66,7 @@ public final class ApiActions {
     /** POST with form params */
     public static Response postWithForm(String endpoint, Map<String, String> formParams) {
         int size = (formParams == null) ? 0 : formParams.size();
-        logger.info("➡️  POST {} with {} field{}", endpoint, size, size == 1 ? "" : "s");
+        logger.info("POST {} with {} field{}", endpoint, size, size == 1 ? "" : "s");
         Response response = given()
                 .baseUri(BASE_URL)
                 .accept(ContentType.JSON)
@@ -83,7 +83,7 @@ public final class ApiActions {
 
     // ---------- PUT ----------
     public static Response put(String endpoint) {
-        logger.info("➡️  PUT {}", endpoint);
+        logger.info("PUT {}", endpoint);
         Response response = given()
                 .baseUri(BASE_URL)
                 .accept(ContentType.JSON)
@@ -113,9 +113,9 @@ public final class ApiActions {
         }
 
         if (message != null && !message.isBlank()) {
-            logger.info("✅ {} {} → {} ({})", method, endpoint, status, message);
+            logger.info("{} {} → {} ({})", method, endpoint, status, message);
         } else {
-            logger.info("✅ {} {} → {}", method, endpoint, status);
+            logger.info("{} {} → {}", method, endpoint, status);
         }
     }
 }
