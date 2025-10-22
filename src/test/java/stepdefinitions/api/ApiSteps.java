@@ -10,6 +10,7 @@ import models.responses.ApiResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import utils.FormDataResolver;
+import utils.PropertiesUtil;
 
 import java.util.Map;
 
@@ -23,21 +24,33 @@ public class ApiSteps {
     private final ScenarioContext scenarioContext = new ScenarioContext();
     private Response response;
 
+
+    private String resolvePath(String endpointOrKey) {
+
+        String fromConfig = PropertiesUtil.getProperty(endpointOrKey);
+        if (fromConfig != null && !fromConfig.isEmpty()) {
+            return fromConfig;
+        }
+
+        return endpointOrKey;
+    }
+
     private ApiResponse asApiResponse() {
         assertThat(response).as("Response was not set").isNotNull();
         return response.then().extract().as(ApiResponse.class);
     }
 
-    // -------- Given --------
+
     @Given("the API base URL is loaded from config")
     public void load_base_url_from_config() {
         logger.info("API base URL loaded from config.");
+
     }
 
-    // -------- When --------
+
     @When("I send a GET request to {string}")
     public void i_send_get_request(String endpoint) {
-        response = ApiActions.get(endpoint);
+        response = ApiActions.get(resolvePath(endpoint));
     }
 
     @When("I send a POST request to {string} with body:")
@@ -47,15 +60,15 @@ public class ApiSteps {
                 faker,
                 scenarioContext
         );
-        response = ApiActions.postWithForm(endpoint, formParams);
+        response = ApiActions.postWithForm(resolvePath(endpoint), formParams);
     }
 
     @When("I send a PUT request to {string}")
     public void i_send_put_request(String endpoint) {
-        response = ApiActions.put(endpoint);
+        response = ApiActions.put(resolvePath(endpoint));
     }
 
-    // -------- Then --------
+
     @Then("the response code should be {int}")
     public void the_response_code_should_be(int expectedCode) {
         assertThat(response.statusCode()).isEqualTo(expectedCode);

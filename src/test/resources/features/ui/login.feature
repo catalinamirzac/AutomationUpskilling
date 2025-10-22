@@ -9,8 +9,8 @@ Feature: User Login
   Scenario Outline: Login with various credentials
     Given the user is on the Automation exercise home page
     When the user navigates to the login page
-    When the user enters "<email>" and "<password>"
-    When the user clicks the login button
+    And the user enters "<email>" and "<password>"
+    And  the user clicks the login button
     Then the login should <result>
 
     Examples:

@@ -23,7 +23,7 @@ public class LoginSteps extends BaseDefine {
         logger.info("Clicked on Signup/Login link");
     }
 
-    // Scenario Outline uses "<email>" and "<password>" -> {string} is correct
+
     @When("the user enters {string} and {string}")
     public void the_user_enters_credentials(String email, String password) {
         loginPage.enterEmail(email);
@@ -52,7 +52,7 @@ public class LoginSteps extends BaseDefine {
         logger.info("Login successful - user is logged in");
     }
 
-    // Matches: Then the login should <result>   where result ∈ {succeed, fail}
+
     @Then("the login should {word}")
     public void the_login_should(String result) {
         switch (result.toLowerCase()) {
