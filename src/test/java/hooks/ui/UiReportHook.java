@@ -1,4 +1,3 @@
-// src/test/java/hooks/ui/UiReportHook.java
 package hooks.ui;
 
 import io.cucumber.java.*;
@@ -16,17 +15,30 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class UiReportHook {
-    // one timestamp per JVM run
-    private static String RUN_DATE; // yyyy.MM.dd
-    private static String RUN_TIME; // HH_mm_ss
+    private static String LOG_ROOT;
+    private static String RUN_DATE; // yyyy-MM-dd
+    private static String RUN_TIME; // HH-mm-ss
+
+    static {
+        LOG_ROOT = System.getProperty("LOG_ROOT", "logs");
+        RUN_DATE = System.getProperty("RUN_DATE");
+        RUN_TIME = System.getProperty("RUN_TIME");
+        if (RUN_DATE == null) {
+            RUN_DATE = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            System.setProperty("RUN_DATE", RUN_DATE);
+        }
+        if (RUN_TIME == null) {
+            RUN_TIME = LocalTime.now().format(DateTimeFormatter.ofPattern("HH-mm-ss"));
+            System.setProperty("RUN_TIME", RUN_TIME);
+        }
+    }
+
     private static final ThreadLocal<Path> SCENARIO_DIR = new ThreadLocal<>();
 
     @Before("@ui")
     public void beforeUiScenario(Scenario s) {
-        ensureStamp();
-        WebDriver driver = DriverManager.getDriver(); // ensure driver exists
-        AllureEnv.writeOnce(driver);                  // optional Allure env tab
-
+        WebDriver driver = DriverManager.getDriver(); // ensure driver
+        AllureEnv.writeOnce(driver);                   // optional
         Path dir = scenarioDir("UI", s);
         SCENARIO_DIR.set(dir);
         writeString(dir.resolve("log.txt"), "START " + s.getName() + System.lineSeparator());
@@ -42,7 +54,6 @@ public class UiReportHook {
         }
     }
 
-    // Attach artifacts BEFORE the driver is quit (order higher than teardown)
     @After(value = "@ui", order = 100)
     public void attachArtifacts(Scenario s) {
         WebDriver d = DriverManager.getDriver();
@@ -50,7 +61,6 @@ public class UiReportHook {
 
         Path dir = SCENARIO_DIR.get();
 
-        // Final screenshot
         byte[] png = Screenshots.take(d);
         if (png != null) {
             String base = s.isFailed() ? "FAILED" : "PASSED";
@@ -58,36 +68,22 @@ public class UiReportHook {
             writeBytes(dir.resolve(base + ".png"), png);
         }
 
-        // Page source
         try {
             String html = d.getPageSource();
             Allure.addAttachment("Page Source", "text/html", html, ".html");
             writeString(dir.resolve("page.html"), html);
         } catch (Throwable ignored) {}
 
-        // Browser console (if available)
-        try {
-            var entries = d.manage().logs().get("browser").getAll();
-            if (!entries.isEmpty()) {
-                String text = entries.stream().map(Object::toString).reduce((a,b)->a+"\n"+b).orElse("");
-                Allure.addAttachment("Browser Console", "text/plain", text);
-                writeString(dir.resolve("console.txt"), text);
-            }
-        } catch (Throwable ignored) {}
-
         writeString(dir.resolve("log.txt"),
                 "END " + s.getName() + " -> " + (s.isFailed() ? "FAILED" : "PASSED") + System.lineSeparator());
+
+        SCENARIO_DIR.remove();
     }
 
-    // -------- helpers (local) --------
-    private static void ensureStamp() {
-        if (RUN_DATE == null) RUN_DATE = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-        if (RUN_TIME == null) RUN_TIME = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss"));
-    }
-
+    /** logs/UI/<date>/<time>/<scenario>/ */
     private static Path scenarioDir(String type, Scenario s) {
         String name = slug(s.getName());
-        Path dir = Paths.get("target", "reports", type, RUN_DATE, RUN_TIME, name);
+        Path dir = Paths.get(LOG_ROOT, type, RUN_DATE, RUN_TIME, name);
         try { Files.createDirectories(dir); } catch (Exception ignored) {}
         return dir;
     }
@@ -104,7 +100,6 @@ public class UiReportHook {
             Files.write(to, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (Exception ignored) {}
     }
-
     private static void writeString(Path to, String text) {
         try {
             Files.createDirectories(to.getParent());
