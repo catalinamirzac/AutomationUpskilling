@@ -10,8 +10,25 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class ApiReportHook {
-    private static String RUN_DATE; // yyyy.MM.dd
-    private static String RUN_TIME; // HH_mm_ss
+    // share one stamp per JVM without new classes
+    private static String LOG_ROOT;
+    private static String RUN_DATE; // yyyy-MM-dd
+    private static String RUN_TIME; // HH-mm-ss
+
+    static {
+        LOG_ROOT = System.getProperty("LOG_ROOT", "logs");
+        RUN_DATE = System.getProperty("RUN_DATE");
+        RUN_TIME = System.getProperty("RUN_TIME");
+        if (RUN_DATE == null) {
+            RUN_DATE = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            System.setProperty("RUN_DATE", RUN_DATE);
+        }
+        if (RUN_TIME == null) {
+            RUN_TIME = LocalTime.now().format(DateTimeFormatter.ofPattern("HH-mm-ss"));
+            System.setProperty("RUN_TIME", RUN_TIME);
+        }
+    }
+
     private static final ThreadLocal<Path> SCENARIO_DIR = new ThreadLocal<>();
 
     public static void appendToScenarioLog(String text) {
@@ -21,8 +38,6 @@ public class ApiReportHook {
 
     @Before("@api")
     public void beforeApiScenario(Scenario scenario) {
-        utils.AllureEnv.writeOnce(null); // environment tab in Allure
-        ensureStamp();
         Path dir = scenarioDir("API", scenario);
         SCENARIO_DIR.set(dir);
         write(dir, "log.txt", "START " + scenario.getName() + System.lineSeparator());
@@ -32,8 +47,7 @@ public class ApiReportHook {
     public void afterApiScenario(Scenario scenario) {
         Path dir = SCENARIO_DIR.get();
         write(dir, "log.txt",
-                "END " + scenario.getName() + " -> " + (scenario.isFailed() ? "FAILED" : "PASSED")
-                        + System.lineSeparator());
+                "END " + scenario.getName() + " -> " + (scenario.isFailed() ? "FAILED" : "PASSED") + System.lineSeparator());
         try {
             Path file = dir.resolve("log.txt");
             if (Files.exists(file)) {
@@ -43,14 +57,10 @@ public class ApiReportHook {
         SCENARIO_DIR.remove();
     }
 
-    private static void ensureStamp() {
-        if (RUN_DATE == null) RUN_DATE = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-        if (RUN_TIME == null) RUN_TIME = LocalTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss"));
-    }
-
+    /** logs/API/<date>/<time>/<scenario>/ */
     private static Path scenarioDir(String type, Scenario s) {
         String name = slug(s.getName());
-        Path dir = Paths.get("target", "reports", type, RUN_DATE, RUN_TIME, name);
+        Path dir = Paths.get(LOG_ROOT, type, RUN_DATE, RUN_TIME, name);
         try { Files.createDirectories(dir); } catch (Exception ignored) {}
         return dir;
     }
@@ -63,7 +73,6 @@ public class ApiReportHook {
 
     private static void write(Path dir, String fileName, String text) {
         try {
-            if (dir == null) return;
             Files.createDirectories(dir);
             Files.writeString(dir.resolve(fileName), text,
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);

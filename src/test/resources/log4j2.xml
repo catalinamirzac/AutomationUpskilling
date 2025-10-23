@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="LOG_DIR">${sys:project.build.directory:-target}/logs</Property>
+        <!-- Keep history: default to ./logs; override with -DLOG_ROOT=... -->
+        <Property name="LOG_ROOT">${sys:LOG_ROOT:-logs}</Property>
+        <!-- This stamp is independent; it's fine if the time differs by a second from hooks -->
         <Property name="STAMP">${date:yyyy-MM-dd}/${date:HH-mm-ss}</Property>
         <Property name="CONSOLE_PATTERN">%highlight{%d{HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n}</Property>
         <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %c{1.} - %msg%n</Property>
@@ -11,8 +13,8 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${CONSOLE_PATTERN}"/>
         </Console>
-        <!-- Optional: run-wide log -->
-        <File name="RunFile" fileName="${LOG_DIR}/${STAMP}/run.log" createOnDemand="true">
+        <!-- Run-wide log kept under logs/RUN/... so previous runs remain -->
+        <File name="RunFile" fileName="${LOG_ROOT}/RUN/${STAMP}/run.log" createOnDemand="true">
             <PatternLayout pattern="${FILE_PATTERN}"/>
         </File>
     </Appenders>
